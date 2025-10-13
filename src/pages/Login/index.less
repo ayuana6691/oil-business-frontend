@@ -1,0 +1,29 @@
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.loginCard {
+  width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 10%);
+  border-radius: 8px;
+
+  :global {
+    .ant-card-head {
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+
+      .ant-card-head-title {
+        font-size: 24px;
+        font-weight: 600;
+      }
+    }
+
+    .ant-card-body {
+      padding: 24px;
+    }
+  }
+}
