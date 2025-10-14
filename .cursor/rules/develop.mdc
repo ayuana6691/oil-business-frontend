@@ -1,0 +1,224 @@
+---
+alwaysApply: true
+---
+# 项目规则和编码规范
+
+## 技术栈
+- 框架：UmiJS + React + TypeScript
+- UI组件：Ant Design + ProComponents
+- 包管理器：pnpm
+- 状态管理：UmiJS内置方案
+
+## 编码规范
+
+### TypeScript规范
+1. 所有代码采用TypeScript编写，遵循现代TypeScript编程规范
+2. 严格遵循类型定义，避免使用any类型
+3. 接口和类型定义使用namespace进行组织（如API命名空间）
+4. 区分不同场景的类型定义：
+   - `Info`：完整信息类型（用于展示）
+   - `InfoVO`：Value Object类型（用于创建）
+   - `UpdateVO`：更新专用类型（仅包含可修改字段）
+
+### 代码风格
+1. **字符串使用单引号**
+2. private方法或属性不能直接在外部访问
+3. 代码注重清晰、简洁、易于维护
+4. 必要时添加详细注释说明关键算法和逻辑
+5. 属性的注释说明用`/** 注释文案 */`形式，放在属性上方
+6. 代码不应包含任何无关的注释（如优化方向、TODO等）
+7. 避免使用过新的ES规范（如includes方法应避免使用）
+
+### 代码设计原则
+1. 遵循六大设计原则（单一职责、开闭原则、里氏替换、接口隔离、依赖倒置、迪米特法则）
+2. 保持函数或类的颗粒化、单一职责
+3. 高内聚、低耦合的基本设计原则
+4. 根据项目实际情况适当调整，但总体不能偏离基本准则
+
+## API接口规范
+
+### RESTful风格
+1. 所有接口遵循RESTful规范
+2. 接口路径使用复数形式（如`/employees`而非`/employee`）
+3. HTTP方法使用规范：
+   - GET：查询/获取资源
+   - POST：创建资源
+   - PUT：更新资源（完整更新）
+   - DELETE：删除资源
+
+### 接口路径规范
+```
+GET    /api/admin/resources          # 查询列表
+POST   /api/admin/resources          # 创建资源
+GET    /api/admin/resources/{id}     # 获取详情
+PUT    /api/admin/resources/{id}     # 更新资源
+DELETE /api/admin/resources/{id}     # 删除资源
+```
+
+### 接口返回结构
+所有接口统一返回结构：
+```typescript
+{
+  message: string;  // 消息提示
+  code: number;     // 状态码（200表示成功）
+  data: any;        // 业务数据
+}
+```
+
+### 分页数据结构
+所有带分页的接口的data结构：
+```typescript
+{
+  list: Array;      // 当前分页的具体列表数据
+  current: number;  // 当前页码
+  total: number;    // 总记录数
+}
+```
+
+### 查询参数规范
+1. 分页参数：`page`（页码）、`pageSize`（每页数量）
+2. 关键词搜索：`keyword`
+3. 状态筛选：`status`（0-禁用，1-启用）
+4. 其他筛选：根据业务需求添加（如`roleId`）
+
+## 服务层规范
+
+### 文件组织
+```
+src/services/
+  ├── typings.d.ts          # 类型定义
+  ├── ResourceController.ts  # 资源控制器
+  └── index.ts              # 统一导出
+```
+
+### Controller文件规范
+1. 使用`/* eslint-disable */`禁用eslint（自动生成的文件）
+2. 添加文件头注释：`// 该文件由 OneAPI 自动生成，请勿手动修改！`
+3. 每个方法添加JSDoc注释说明功能和参数
+4. 使用`@umijs/max`的request方法发送请求
+
+### 类型定义规范
+1. 使用`declare namespace API`组织类型
+2. 为每个资源定义完整类型：
+   - `ResourceInfo`：完整信息
+   - `ResourceInfoVO`：创建时使用
+   - `ResourceUpdateVO`：更新时使用（仅包含可修改字段）
+3. 定义分页相关类型：
+   - `PageInfo_Resource_`
+   - `Result_Resource_`
+   - `Result_PageInfo_Resource__`
+
+## 组件开发规范
+
+### 表单组件规范
+1. 使用ProComponents提供的表单组件（ProForm、ProFormText等）
+2. 表单Props类型定义：
+   ```typescript
+   export type FormProps = {
+     onCancel: () => void;
+     onSubmit: (values: API.ResourceVO) => Promise<boolean>;
+     modalVisible: boolean;
+     values?: Partial<API.ResourceInfo>;  // 编辑表单需要
+   };
+   ```
+3. 表单验证使用rules配置
+4. 必填项添加required验证
+5. 特殊格式（手机号、邮箱）添加pattern验证
+
+### 下拉选择规范
+1. 需要动态加载数据的下拉框，在组件内部使用useEffect加载
+2. 使用useState维护选项数据
+3. 选项格式：`{ label: string; value: number | string }`
+4. 加载失败时打印错误日志到控制台
+
+### 列表页面规范
+1. 使用ProTable组件
+2. 列配置使用ProColumns类型
+3. 搜索项配置：
+   - 隐藏表格列：`hideInTable: true`
+   - 隐藏搜索项：`hideInSearch: true`
+   - 隐藏详情：`hideInDescriptions: true`
+4. request方法统一处理：
+   ```typescript
+   request={async (params) => {
+     const { data, code } = await queryList(params);
+     return {
+       data: data?.list || [],
+       success: code === 200,
+       total: data?.total || 0,
+     };
+   }}
+   ```
+
+## 状态管理规范
+
+### 状态值定义
+1. 启用/禁用状态统一使用数字：
+   - `1`：启用/激活
+   - `0`：禁用/停用
+2. 状态显示使用Tag组件：
+   ```typescript
+   <Tag color={status === 1 ? 'green' : 'red'}>
+     {status === 1 ? '启用' : '禁用'}
+   </Tag>
+   ```
+
+## 数据映射规范
+
+### ID到名称映射
+当需要显示关联数据的名称时（如roleId显示为roleName）：
+1. 页面加载时获取关联数据列表
+2. 使用Record类型维护映射关系：`Record<number, string>`
+3. 渲染时通过ID查找名称：`roleMap[record.roleId] || record.roleName`
+
+## 错误处理规范
+
+1. 所有异步操作使用try-catch包裹
+2. 错误信息使用`console.error`输出到控制台
+3. 用户提示使用antd的message组件
+4. 操作状态提示：
+   - 开始操作：`message.loading('正在操作')`
+   - 成功：`message.success('操作成功')`
+   - 失败：`message.error('操作失败请重试！')`
+
+## 注释规范
+
+### 函数注释
+```typescript
+/**
+ * 函数功能说明
+ * @param param1 参数1说明
+ * @param param2 参数2说明
+ */
+```
+
+### 属性注释
+```typescript
+interface Example {
+  /** 属性说明 */
+  property: string;
+}
+```
+
+### 关键逻辑注释
+在复杂逻辑处添加中文注释说明意图和实现方式
+
+## 禁止事项
+
+1. ❌ 不要生成优化方向的注释（如"提取公共方法"）
+2. ❌ 不要包含无关的文案说明
+3. ❌ 非重大重构不生成markdown文档
+4. ❌ 不要使用过新的ES特性（兼容性考虑）
+5. ❌ 不要在不明确的情况下假设需求（NO ASSUMPTIONS）
+6. ❌ 不要偏离提供的任务（NO DEVIATIONS）
+
+## 开发流程规范
+
+1. 遇到不明白或不清楚的地方，先停止编码，询问清楚后再动手
+2. 严格按照项目背景与编码规范进行
+3. 简单的优化、修复bug等不生成文档说明，在聊天框说明即可
+4. 重大重构、新组件开发才生成文档
+
+## 提交规范
+
+使用规范的commit message格式（如需要）
