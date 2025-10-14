@@ -2,8 +2,9 @@ import {
   addEmployee,
   deleteEmployee,
   queryEmployeeList,
+  queryRoleList,
   updateEmployee,
-} from '@/services/demo';
+} from '@/services';
 import {
   ActionType,
   FooterToolbar,
@@ -14,7 +15,7 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, Divider, Drawer, message, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 
@@ -22,10 +23,10 @@ import UpdateForm, { FormValueType } from './components/UpdateForm';
  * 添加员工
  * @param fields 员工信息
  */
-const handleAdd = async (fields: API.EmployeeInfo) => {
+const handleAdd = async (fields: API.EmployeeInfoVO) => {
   const hide = message.loading('正在添加');
   try {
-    await addEmployee({ ...fields });
+    await addEmployee(fields);
     hide();
     message.success('添加成功');
     return true;
@@ -41,21 +42,17 @@ const handleAdd = async (fields: API.EmployeeInfo) => {
  * 更新员工信息
  * @param fields 员工信息
  */
-const handleUpdate = async (fields: FormValueType) => {
+const handleUpdate = async (fields: FormValueType, employeeId: string) => {
   const hide = message.loading('正在更新');
   try {
     await updateEmployee(
       {
-        employeeId: fields.id || '',
+        employeeId,
       },
       {
-        name: fields.name || '',
-        phone: fields.phone || '',
-        email: fields.email || '',
-        department: fields.department || '',
-        position: fields.position || '',
-        joinDate: fields.joinDate || '',
-        status: fields.status || 'ACTIVE',
+        name: fields.name,
+        roleId: fields.roleId,
+        status: fields.status,
       },
     );
     hide();
@@ -101,108 +98,90 @@ const EmployeeList: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
   const [row, setRow] = useState<API.EmployeeInfo>();
   const [selectedRowsState, setSelectedRows] = useState<API.EmployeeInfo[]>([]);
+  const [roleMap, setRoleMap] = useState<Record<number, string>>({});
+
+  const loadRoles = async () => {
+    try {
+      const response = await queryRoleList({
+        pageSize: 100,
+      });
+      if (response.data?.list) {
+        const map: Record<number, string> = {};
+        response.data.list.forEach((role) => {
+          if (role.id) {
+            map[role.id] = role.name || '';
+          }
+        });
+        setRoleMap(map);
+      }
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadRoles();
+  }, []);
 
   const columns: ProColumns<API.EmployeeInfo>[] = [
     {
       title: '员工姓名',
       dataIndex: 'name',
-      tip: '员工姓名是唯一的标识',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '员工姓名为必填项',
-          },
-        ],
-      },
+      hideInSearch: true,
     },
     {
       title: '手机号',
       dataIndex: 'phone',
-      valueType: 'text',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '手机号为必填项',
-          },
-          {
-            pattern: /^1[3-9]\d{9}$/,
-            message: '请输入有效的手机号',
-          },
-        ],
+      hideInSearch: true,
+    },
+    {
+      title: '角色',
+      dataIndex: 'roleId',
+      hideInTable: true,
+      valueType: 'select',
+      fieldProps: {
+        options: Object.keys(roleMap).map((key) => ({
+          label: roleMap[Number(key)],
+          value: Number(key),
+        })),
       },
     },
     {
-      title: '邮箱',
-      dataIndex: 'email',
-      valueType: 'text',
-      formItemProps: {
-        rules: [
-          {
-            type: 'email',
-            message: '请输入有效的邮箱地址',
-          },
-        ],
-      },
-    },
-    {
-      title: '部门',
-      dataIndex: 'department',
-      valueType: 'text',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '部门为必填项',
-          },
-        ],
-      },
-    },
-    {
-      title: '职位',
-      dataIndex: 'position',
-      valueType: 'text',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '职位为必填项',
-          },
-        ],
-      },
-    },
-    {
-      title: '入职时间',
-      dataIndex: 'joinDate',
-      valueType: 'date',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '入职时间为必填项',
-          },
-        ],
+      title: '角色',
+      dataIndex: 'roleName',
+      hideInSearch: true,
+      render: (_, record) => {
+        return record.roleId ? roleMap[record.roleId] || record.roleName : '-';
       },
     },
     {
       title: '状态',
       dataIndex: 'status',
-      hideInForm: true,
+      valueType: 'select',
       valueEnum: {
-        ACTIVE: { text: '在职', status: 'Success' },
-        INACTIVE: { text: '离职', status: 'Error' },
+        1: { text: '启用', status: 'Success' },
+        0: { text: '禁用', status: 'Error' },
       },
       render: (_, record) => (
-        <Tag color={record.status === 'ACTIVE' ? 'green' : 'red'}>
-          {record.status === 'ACTIVE' ? '在职' : '离职'}
+        <Tag color={record.status === 1 ? 'green' : 'red'}>
+          {record.status === 1 ? '启用' : '禁用'}
         </Tag>
       ),
+    },
+    {
+      title: '搜索关键词',
+      dataIndex: 'keyword',
+      hideInTable: true,
+      hideInDescriptions: true,
+      fieldProps: {
+        placeholder: '手机号或姓名',
+      },
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
+      hideInSearch: true,
       render: (_, record) => (
         <>
           <a
@@ -236,28 +215,18 @@ const EmployeeList: React.FC<unknown> = () => {
       dataIndex: 'phone',
     },
     {
-      title: '邮箱',
-      dataIndex: 'email',
-    },
-    {
-      title: '部门',
-      dataIndex: 'department',
-    },
-    {
-      title: '职位',
-      dataIndex: 'position',
-    },
-    {
-      title: '入职时间',
-      dataIndex: 'joinDate',
-      valueType: 'date',
+      title: '角色',
+      dataIndex: 'roleName',
+      render: (_, record) => {
+        return record.roleId ? roleMap[record.roleId] || record.roleName : '-';
+      },
     },
     {
       title: '状态',
       dataIndex: 'status',
       render: (_, record) => (
-        <Tag color={record.status === 'ACTIVE' ? 'green' : 'red'}>
-          {record.status === 'ACTIVE' ? '在职' : '离职'}
+        <Tag color={record.status === 1 ? 'green' : 'red'}>
+          {record.status === 1 ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -285,18 +254,19 @@ const EmployeeList: React.FC<unknown> = () => {
             新建员工
           </Button>,
         ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryEmployeeList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
+        request={async (params) => {
+          const { current, pageSize, keyword, status, roleId } = params;
+          const { data, code } = await queryEmployeeList({
+            page: current,
+            pageSize,
+            keyword,
+            status: status as string,
+            roleId: roleId as string,
           });
           return {
             data: data?.list || [],
-            success,
-            total: data?.total,
+            success: code === 200,
+            total: data?.total || 0,
           };
         }}
         columns={columns}
@@ -328,26 +298,21 @@ const EmployeeList: React.FC<unknown> = () => {
       <CreateForm
         onCancel={() => handleModalVisible(false)}
         modalVisible={createModalVisible}
-      >
-        <ProTable<API.EmployeeInfo, API.EmployeeInfo>
-          onSubmit={async (value: API.EmployeeInfo) => {
-            const success = await handleAdd(value);
-            if (success) {
-              handleModalVisible(false);
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
+        onSubmit={async (value: API.EmployeeInfoVO) => {
+          const success = await handleAdd(value);
+          if (success) {
+            handleModalVisible(false);
+            if (actionRef.current) {
+              actionRef.current.reload();
             }
-          }}
-          rowKey="id"
-          type="form"
-          columns={columns}
-        />
-      </CreateForm>
+          }
+          return success;
+        }}
+      />
       {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
-          onSubmit={async (value: FormValueType) => {
-            const success = await handleUpdate(value);
+          onSubmit={async (value: API.EmployeeUpdateVO) => {
+            const success = await handleUpdate(value, stepFormValues.id || '');
             if (success) {
               handleUpdateModalVisible(false);
               setStepFormValues({});

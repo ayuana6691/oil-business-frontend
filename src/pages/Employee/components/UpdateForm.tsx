@@ -1,15 +1,15 @@
+import { queryRoleList } from '@/services';
 import {
   ProForm,
-  ProFormDatePicker,
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
 import { Modal } from 'antd';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export type UpdateFormProps = {
   onCancel: () => void;
-  onSubmit: (values: API.EmployeeInfo) => Promise<boolean>;
+  onSubmit: (values: API.EmployeeUpdateVO) => Promise<boolean>;
   updateModalVisible: boolean;
   values: Partial<API.EmployeeInfo>;
 };
@@ -17,16 +17,39 @@ export type UpdateFormProps = {
 export type FormValueType = {
   id?: string;
   name?: string;
-  phone?: string;
-  email?: string;
-  department?: string;
-  position?: string;
-  joinDate?: string;
-  status?: 'ACTIVE' | 'INACTIVE';
+  roleId?: number;
+  status?: number;
 };
 
 const UpdateForm: React.FC<UpdateFormProps> = (props) => {
   const { updateModalVisible, onCancel, onSubmit, values } = props;
+  const [roleOptions, setRoleOptions] = useState<
+    { label: string; value: number }[]
+  >([]);
+
+  const loadRoles = async () => {
+    try {
+      const response = await queryRoleList({
+        status: '1',
+        pageSize: 100,
+      });
+      if (response.data?.list) {
+        const options = response.data.list.map((role) => ({
+          label: role.name || '',
+          value: role.id || 0,
+        }));
+        setRoleOptions(options);
+      }
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (updateModalVisible) {
+      loadRoles();
+    }
+  }, [updateModalVisible]);
 
   return (
     <Modal
@@ -40,7 +63,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
         layout="vertical"
         initialValues={values}
         onFinish={async (value) => {
-          const success = await onSubmit(value as FormValueType);
+          const success = await onSubmit(value as API.EmployeeUpdateVO);
           if (success) {
             return true;
           }
@@ -53,45 +76,19 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
           rules={[{ required: true, message: '请输入员工姓名!' }]}
           width="md"
         />
-        <ProFormText
-          name="phone"
-          label="手机号"
-          rules={[
-            { required: true, message: '请输入手机号!' },
-            { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号!' },
-          ]}
-          width="md"
-        />
-        <ProFormText
-          name="email"
-          label="邮箱"
-          rules={[{ type: 'email', message: '请输入有效的邮箱地址!' }]}
-          width="md"
-        />
-        <ProFormText
-          name="department"
-          label="部门"
-          rules={[{ required: true, message: '请输入部门!' }]}
-          width="md"
-        />
-        <ProFormText
-          name="position"
-          label="职位"
-          rules={[{ required: true, message: '请输入职位!' }]}
-          width="md"
-        />
-        <ProFormDatePicker
-          name="joinDate"
-          label="入职时间"
-          rules={[{ required: true, message: '请选择入职时间!' }]}
+        <ProFormSelect
+          name="roleId"
+          label="角色"
+          options={roleOptions}
+          rules={[{ required: true, message: '请选择角色!' }]}
           width="md"
         />
         <ProFormSelect
           name="status"
-          label="状态"
+          label="启用状态"
           options={[
-            { value: 'ACTIVE', label: '在职' },
-            { value: 'INACTIVE', label: '离职' },
+            { value: 1, label: '启用' },
+            { value: 0, label: '禁用' },
           ]}
           rules={[{ required: true, message: '请选择状态!' }]}
           width="md"

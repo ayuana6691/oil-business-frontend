@@ -1,4 +1,4 @@
-import { login } from '@/services/demo';
+import { login } from '@/services';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import { Button, Card, Form, Input, message } from 'antd';

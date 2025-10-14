@@ -1,9 +1,4 @@
-import {
-  addUser,
-  deleteUser,
-  modifyUser,
-  queryUserList,
-} from '@/services/demo';
+import { addUser, deleteUser, modifyUser, queryUserList } from '@/services';
 import {
   ActionType,
   FooterToolbar,

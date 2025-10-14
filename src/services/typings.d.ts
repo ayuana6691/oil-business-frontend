@@ -3,70 +3,81 @@
 
 declare namespace API {
   interface PageInfo {
-    /** 
-1 */
     current?: number;
-    pageSize?: number;
     total?: number;
     list?: Array<Record<string, any>>;
   }
 
   interface PageInfo_UserInfo_ {
-    /** 
-1 */
     current?: number;
-    pageSize?: number;
     total?: number;
     list?: Array<UserInfo>;
   }
 
   interface Result {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: Record<string, any>;
   }
 
   interface Result_PageInfo_UserInfo__ {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: PageInfo_UserInfo_;
   }
 
   interface Result_UserInfo_ {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: UserInfo;
   }
 
   interface Result_string_ {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: string;
   }
 
   interface Result_LoginResponse_ {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: LoginResponse;
   }
 
   interface Result_EmployeeInfo_ {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: EmployeeInfo;
   }
 
   interface Result_PageInfo_EmployeeInfo__ {
-    success?: boolean;
-    errorMessage?: string;
+    message?: string;
+    code?: number;
     data?: PageInfo_EmployeeInfo_;
   }
 
   interface PageInfo_EmployeeInfo_ {
     current?: number;
-    pageSize?: number;
     total?: number;
     list?: Array<EmployeeInfo>;
+  }
+
+  interface Result_RoleInfo_ {
+    message?: string;
+    code?: number;
+    data?: RoleInfo;
+  }
+
+  interface Result_PageInfo_RoleInfo__ {
+    message?: string;
+    code?: number;
+    data?: PageInfo_RoleInfo_;
+  }
+
+  interface PageInfo_RoleInfo_ {
+    current?: number;
+    total?: number;
+    list?: Array<RoleInfo>;
   }
 
   type UserGenderEnum = 'MALE' | 'FEMALE';
@@ -110,16 +121,12 @@ declare namespace API {
     name?: string;
     /** 手机号 */
     phone?: string;
-    /** 邮箱 */
-    email?: string;
-    /** 部门 */
-    department?: string;
-    /** 职位 */
-    position?: string;
-    /** 入职时间 */
-    joinDate?: string;
-    /** 状态 */
-    status?: 'ACTIVE' | 'INACTIVE';
+    /** 角色ID */
+    roleId?: number;
+    /** 角色名称 */
+    roleName?: string;
+    /** 状态：0-禁用，1-启用 */
+    status?: number;
   }
 
   interface EmployeeInfoVO {
@@ -127,16 +134,45 @@ declare namespace API {
     name?: string;
     /** 手机号 */
     phone?: string;
-    /** 邮箱 */
-    email?: string;
-    /** 部门 */
-    department?: string;
-    /** 职位 */
-    position?: string;
-    /** 入职时间 */
-    joinDate?: string;
-    /** 状态 */
-    status?: 'ACTIVE' | 'INACTIVE';
+    /** 密码 */
+    password?: string;
+    /** 角色ID */
+    roleId?: number;
+  }
+
+  interface EmployeeUpdateVO {
+    /** 员工姓名 */
+    name?: string;
+    /** 角色ID */
+    roleId?: number;
+    /** 状态：0-禁用，1-启用 */
+    status?: number;
+  }
+
+  interface RoleInfo {
+    /** 角色ID */
+    id?: number;
+    /** 角色名称 */
+    name?: string;
+    /** 角色代码 */
+    code?: string;
+    /** 角色描述 */
+    description?: string;
+    /** 权限ID列表 */
+    permissionIds?: number[];
+    /** 状态：0-禁用，1-启用 */
+    status?: number;
+  }
+
+  interface RoleInfoVO {
+    /** 角色名称 */
+    name?: string;
+    /** 角色代码 */
+    code?: string;
+    /** 角色描述 */
+    description?: string;
+    /** 权限ID列表 */
+    permissionIds?: number[];
   }
 
   type definitions_0 = null;

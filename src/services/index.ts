@@ -3,4 +3,5 @@
 
 export * from './AuthController';
 export * from './EmployeeController';
+export * from './RoleController';
 export * from './UserController';
