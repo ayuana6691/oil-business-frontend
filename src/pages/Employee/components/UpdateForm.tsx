@@ -53,7 +53,6 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
 
   return (
     <Modal
-      destroyOnClose
       title="编辑员工"
       open={updateModalVisible}
       onCancel={() => onCancel()}

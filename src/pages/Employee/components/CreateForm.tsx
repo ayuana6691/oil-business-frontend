@@ -45,7 +45,6 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
 
   return (
     <Modal
-      destroyOnClose
       title="新建员工"
       open={modalVisible}
       onCancel={() => onCancel()}
